@@ -14,13 +14,19 @@ export class UserChangesService {
     return await this.userChangesRepository.save(userChange);
   }
 
-  async getUserChanges(userId: number, page: number = 1, limit: number = 10) {
-    const [results, total] = await this.userChangesRepository.findAndCount({
-      where: { userId },
+  async getUserChanges(userId?: number, page: number = 1, limit: number = 10) {
+    const query: any = {
       order: { timestamp: 'DESC' },
       take: limit,
       skip: (page - 1) * limit,
-    });
+    };
+
+    if (userId !== undefined) {
+      query.where = { userId };
+    }
+
+    const [results, total] =
+      await this.userChangesRepository.findAndCount(query);
     return {
       data: results,
       total,

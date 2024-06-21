@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, ParseIntPipe, Query } from '@nestjs/common';
 import { UserChangesService } from './user-changes.service';
 
 @Controller('user-changes')
@@ -7,9 +7,9 @@ export class UserChangesController {
 
   @Get()
   async getUserChanges(
-    @Query('userId') userId: number,
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('limit', ParseIntPipe) limit: number = 10,
+    @Query('userId', new ParseIntPipe({ optional: true })) userId?: number,
   ) {
     return this.userChangesService.getUserChanges(userId, page, limit);
   }
