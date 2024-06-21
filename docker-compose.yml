@@ -1,0 +1,90 @@
+version: '3.8'
+services:
+  my-service1:
+    build:
+      context: ./task1/service1
+    ports:
+      - '3001:3000'
+    environment:
+      - DB_HOST=my-test-postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_DATABASE=service1
+      - DB_PASSWORD=12345qwert
+      - PORT=3000
+      - RABBITMQ_URL=amqp://my-test-rabbitmq:5672
+      - RABBITMQ_QUEUE=users_changes
+    depends_on:
+      my-test-rabbitmq:
+        condition: service_healthy
+      my-test-postgres:
+        condition: service_healthy
+
+  my-service2:
+    build:
+      context: ./task1/service2
+    ports:
+      - '3002:3000'
+    environment:
+      - RABBITMQ_URL=amqp://my-test-rabbitmq:5672
+      - RABBITMQ_QUEUE=users_changes
+      - DB_HOST=my-test-postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_DATABASE=service2
+      - DB_PASSWORD=12345qwert
+      - PORT=3000
+    depends_on:
+      my-test-rabbitmq:
+        condition: service_healthy
+      my-test-postgres:
+        condition: service_healthy
+
+  my-service3:
+    build:
+      context: ./task2
+    ports:
+      - '3003:3000'
+    environment:
+      - DB_HOST=my-test-postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=12345qwert
+      - DB_DATABASE=service3
+      - PORT=3000
+    depends_on:
+      my-test-postgres:
+        condition: service_healthy
+
+  my-test-rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    healthcheck:
+      test: ['CMD-SHELL', 'rabbitmq-diagnostics ping']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  my-test-postgres:
+    image: postgres:alpine3.20
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_PASSWORD=12345qwert
+    volumes:
+      - my-test-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  my-test-postgres-data:
